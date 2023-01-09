@@ -43,6 +43,6 @@ def convert_date_to_timestamp_miliseconds(date):
     return int(datetime.strptime(date, '%Y-%m-%d').timestamp() * 1000)
 
 def get_alphavantage_earnings(symbol, api_key):
-    url = f'https://www.alphavantage.co/query?function=EARNINGS&symbol={symbol}}&apikey={api_key}}'
+    url = f'https://www.alphavantage.co/query?function=EARNINGS&symbol={symbol}&apikey={api_key}}'
     r = requests.get(url)
     return r.json()

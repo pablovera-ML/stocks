@@ -1,7 +1,8 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime
-from itertools import product
+import time
+import schedule
 import utils
 import yfinance as yfi
 
@@ -88,7 +89,12 @@ def pull_data_from_alphavantage():
                                con=engine)
         logger.info(f"Table {utils.tickers[ticker_name]}_annual_earnings created!")
 
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-
+    schedule.every(10).minutes.do(pull_data_from_yfinance)
+    schedule.every(10).minutes.do(pull_data_from_alphavantage)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
