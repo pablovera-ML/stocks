@@ -11,6 +11,7 @@
 .idea/**/shelf
 
 .DS_Store
+queries/
 
 # Generated files
 .idea/**/contentModel.xml
@@ -210,7 +211,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+#.env
 .venv
 env/
 venv/

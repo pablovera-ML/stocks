@@ -1,85 +1,94 @@
+import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime
 from itertools import product
 import utils
+import yfinance as yfi
 
-# This is a sample Python script.
+logger = utils.LOGGER
+logger.info(f"Starting at {datetime.now()}...")
+schema = 'traditional_finance'
+credentials = utils.get_secret()
+logger.info("Creating DB engine")
+db_uri = utils.get_db_url(host=credentials['host'],
+                          database='timeseries',
+                          user_name=credentials['username'],
+                          password=credentials['password'],
+                          port=5432)
+engine = create_engine(db_uri, echo=False)
+logger.info("DB Engine created")
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
+def pull_data_from_yfinance():
+    for interval in utils.intervals:
+        print(f"Downloading data for interval {interval}")
+        data = yfi.download(  # or pdr.get_data_yahoo(...
+            # tickers list or string as well
+            tickers=tickers_list,
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+            # use "period" instead of start/end
+            # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+            # (optional, default is '1mo')
+            period="max",
 
+            # fetch data by interval (including intraday if period < 60 days)
+            # valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+            # (optional, default is '1d')
+            interval=interval,
+
+            # group by ticker (to access via data['SPY'])
+            # (optional, default is 'column')
+            group_by='ticker',
+
+            # adjust all OHLC automatically
+            # (optional, default is False)
+            auto_adjust=False,
+
+            # download pre/post regular market hours data
+            # (optional, default is False)
+            prepost=False,
+
+            # use threads for mass downloading? (True/False/Integer)
+            # (optional, default is True)
+            threads=True,
+
+            # proxy URL scheme use use when downloading?
+            # (optional, default is None)
+            proxy=None
+        )
+
+        for ticker_name in utils.tickers_list:
+            print("Creating table in DB")
+            ticker_ohlc = data[ticker_name]
+            ticker_ohlc.columns = list(map(lambda x: x.lower(), ticker_ohlc.columns.to_list()))
+            table_name = f"{utils.tickers[ticker_name]}_{interval}"
+            ticker_ohlc.dropna().to_sql(table_name,
+                                        index_label='date',
+                                        if_exists='replace',
+                                        con=engine)
+            print(f"Table {table_name} created!")
+
+def pull_data_from_alphavantage():
+    for ticker_name in utils.tickers_list:
+        print(f"Creating earnings tables for {ticker_name} in DB")
+        data = utils.get_alphavantage_earnings(ticker_name, credentials['alphavantage_api_key'])
+        quarterly_earnings = pd.DataFrame.from_dict(data['quaterlyEarnings'])
+        annual_earnings = pd.DataFrame.from_dict(data['annualEarnings'])
+        quarterly_earnings.to_sql(f"{utils.tickers[ticker_name]}_quarterly_earnings",
+                                  schema=schema,
+                                  index_label='date',
+                                  if_exists='replace',
+                                  con=engine)
+        logger.info(f"Table {utils.tickers[ticker_name]}_quarterly_earnings created!")
+
+        annual_earnings.to_sql(f"{utils.tickers[ticker_name]}_annual_earnings",
+                               schema=schema,
+                               index_label='date',
+                               if_exists='replace',
+                               con=engine)
+        logger.info(f"Table {utils.tickers[ticker_name]}_annual_earnings created!")
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    logger = utils.LOGGER
-    logger.info("Starting...")
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     logger.info(e)
 
-    #     raise e
-    schema = 'binance'
-
-    credentials = utils.get_secret()
-    logger.info("Creating DB engine")
-    db_uri = utils.get_db_url(host=credentials['host'],
-                              database='timeseries',
-                              user_name=credentials['username'],
-                              password=credentials['password'],
-                              port=5432)
-
-    engine = create_engine(db_uri, echo=False)
-    logger.info("DB Engine created")
-    pairs = {"btcusdt": "2017-08-18",
-             "bnbusdt": "2017-11-07",
-             "ethusdt": "2017-08-18",
-             "adausdt": "2018-04-18",
-             "dotusdt": "2019-08-19",
-             "ltcusdt": "2017-12-12",
-             "yfiusdt": "2020-08-11",
-             "filusdt": "2020-10-13",
-             "dogeusdt": "2019-07-02",
-             "xrpusdt": "2018-05-01",
-             "solusdt": "2020-08-11",
-             "chzusdt": "2020-09-01",
-             "ksmusdt": "2020-09-01"}
-
-    intervals = ["1m", "15m", "1h", "4h", "1d", "1w"]
-    pairs_intervals = list(product(list(pairs.keys()), intervals))
-
-    with engine.connect() as con:
-        for pair, interval in pairs_intervals:
-            table_name = f"{pair}_{interval}"
-
-            if not utils.check_table_existence(connection=con, schema=schema, table_name=table_name):
-                logger.info(f"Table {schema}.{table_name} does not exist.")
-                start_time = pairs[pair]
-                start_time_miliseconds = str(utils.convert_date_to_timestamp_miliseconds(start_time))
-                utils.create_table(connection=con,
-                                   schema=schema,
-                                   table_name=table_name)
-            else:
-                logger.info(f"Table {schema}.{table_name} already exists.")
-                start_time_miliseconds = utils.get_max_timestamp_miliseconds(connection=con,
-                                                                             schema=schema,
-                                                                             table_name=table_name)
-
-            previous_start_time = 0
-
-            while previous_start_time < int(start_time_miliseconds):
-                previous_start_time = int(start_time_miliseconds)
-                klines_df = utils.get_klines(pair, interval, start_time_miliseconds)
-                utils.insert_klines(engine=engine, connection=con, klines=klines_df, schema=schema,
-                                    table_name=table_name)
-                start_time_miliseconds = klines_df.open_time.max()
-                previous_date = datetime.fromtimestamp(int(klines_df.open_time.min()) / 1000.0)
-                start_date = datetime.fromtimestamp(int(klines_df.open_time.max()) / 1000.0)
-                logger.info(f"Data range from {previous_date} to {start_date}")
 
