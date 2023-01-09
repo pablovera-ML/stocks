@@ -76,23 +76,26 @@ def pull_data_from_yfinance():
 
 def pull_data_from_alphavantage():
     for ticker_name in tickers_list:
-        print(f"Creating earnings tables for {ticker_name} in DB")
-        data = utils.get_alphavantage_earnings(ticker_name, credentials['alphavantage_api_key'])
-        quarterly_earnings = pd.DataFrame.from_dict(data['quaterlyEarnings'])
-        annual_earnings = pd.DataFrame.from_dict(data['annualEarnings'])
-        quarterly_earnings.to_sql(f"{params.tickers[ticker_name]}_quarterly_earnings",
-                                  schema=schema,
-                                  index_label='date',
-                                  if_exists='replace',
-                                  con=engine)
-        logger.info(f"Table {params.tickers[ticker_name]}_quarterly_earnings created!")
+        try:
+            print(f"Creating earnings tables for {ticker_name} in DB")
+            data = utils.get_alphavantage_earnings(ticker_name, credentials['alphavantage_api_key'])
+            quarterly_earnings = pd.DataFrame.from_dict(data['quaterlyEarnings'])
+            annual_earnings = pd.DataFrame.from_dict(data['annualEarnings'])
+            quarterly_earnings.to_sql(f"{params.tickers[ticker_name]}_quarterly_earnings",
+                                      schema=schema,
+                                      index_label='date',
+                                      if_exists='replace',
+                                      con=engine)
+            logger.info(f"Table {params.tickers[ticker_name]}_quarterly_earnings created!")
 
-        annual_earnings.to_sql(f"{params.tickers[ticker_name]}_annual_earnings",
-                               schema=schema,
-                               index_label='date',
-                               if_exists='replace',
-                               con=engine)
-        logger.info(f"Table {params.tickers[ticker_name]}_annual_earnings created!")
+            annual_earnings.to_sql(f"{params.tickers[ticker_name]}_annual_earnings",
+                                   schema=schema,
+                                   index_label='date',
+                                   if_exists='replace',
+                                   con=engine)
+            logger.info(f"Table {params.tickers[ticker_name]}_annual_earnings created!")
+        finally:
+            pass
 
 
 # Press the green button in the gutter to run the script.
