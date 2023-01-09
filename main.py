@@ -79,7 +79,7 @@ def pull_data_from_alphavantage():
         try:
             print(f"Creating earnings tables for {ticker_name} in DB")
             data = utils.get_alphavantage_earnings(ticker_name, credentials['alphavantage_api_key'])
-            quarterly_earnings = pd.DataFrame.from_dict(data['quaterlyEarnings'])
+            quarterly_earnings = pd.DataFrame.from_dict(data['quarterlyEarnings'])
             annual_earnings = pd.DataFrame.from_dict(data['annualEarnings'])
             quarterly_earnings.to_sql(f"{params.tickers[ticker_name]}_quarterly_earnings",
                                       schema=schema,
