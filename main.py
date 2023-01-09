@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime
+import params
 import time
 import schedule
 import utils
@@ -19,9 +20,11 @@ db_uri = utils.get_db_url(host=credentials['host'],
 engine = create_engine(db_uri, echo=False)
 logger.info("DB Engine created")
 
+tickers_list = list(params.tickers.keys())
+
 
 def pull_data_from_yfinance():
-    for interval in utils.intervals:
+    for interval in params.intervals:
         print(f"Downloading data for interval {interval}")
         data = yfi.download(  # or pdr.get_data_yahoo(...
             # tickers list or string as well
@@ -58,42 +61,43 @@ def pull_data_from_yfinance():
             proxy=None
         )
 
-        for ticker_name in utils.tickers_list:
+        for ticker_name in tickers_list:
             print("Creating table in DB")
             ticker_ohlc = data[ticker_name]
             ticker_ohlc.columns = list(map(lambda x: x.lower(), ticker_ohlc.columns.to_list()))
-            table_name = f"{utils.tickers[ticker_name]}_{interval}"
+            table_name = f"{params.tickers[ticker_name]}_{interval}"
             ticker_ohlc.dropna().to_sql(table_name,
                                         index_label='date',
                                         if_exists='replace',
                                         con=engine)
             print(f"Table {table_name} created!")
 
+
 def pull_data_from_alphavantage():
-    for ticker_name in utils.tickers_list:
+    for ticker_name in tickers_list:
         print(f"Creating earnings tables for {ticker_name} in DB")
         data = utils.get_alphavantage_earnings(ticker_name, credentials['alphavantage_api_key'])
         quarterly_earnings = pd.DataFrame.from_dict(data['quaterlyEarnings'])
         annual_earnings = pd.DataFrame.from_dict(data['annualEarnings'])
-        quarterly_earnings.to_sql(f"{utils.tickers[ticker_name]}_quarterly_earnings",
+        quarterly_earnings.to_sql(f"{params.tickers[ticker_name]}_quarterly_earnings",
                                   schema=schema,
                                   index_label='date',
                                   if_exists='replace',
                                   con=engine)
-        logger.info(f"Table {utils.tickers[ticker_name]}_quarterly_earnings created!")
+        logger.info(f"Table {params.tickers[ticker_name]}_quarterly_earnings created!")
 
-        annual_earnings.to_sql(f"{utils.tickers[ticker_name]}_annual_earnings",
+        annual_earnings.to_sql(f"{params.tickers[ticker_name]}_annual_earnings",
                                schema=schema,
                                index_label='date',
                                if_exists='replace',
                                con=engine)
-        logger.info(f"Table {utils.tickers[ticker_name]}_annual_earnings created!")
+        logger.info(f"Table {params.tickers[ticker_name]}_annual_earnings created!")
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    schedule.every(10).minutes.do(pull_data_from_yfinance)
-    schedule.every(10).minutes.do(pull_data_from_alphavantage)
+    schedule.every(1).minutes.do(pull_data_from_yfinance)
+    schedule.every(1).minutes.do(pull_data_from_alphavantage)
     while True:
         schedule.run_pending()
         time.sleep(1)
