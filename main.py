@@ -94,7 +94,8 @@ def pull_data_from_alphavantage():
                                    if_exists='replace',
                                    con=engine)
             logger.info(f"Table {params.tickers[ticker_name]}_annual_earnings created!")
-        finally:
+        except:
+            logger.info(f"passing on symbol {ticker_name}")
             pass
 
 
