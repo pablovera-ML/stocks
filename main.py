@@ -67,6 +67,7 @@ def pull_data_from_yfinance():
             ticker_ohlc.columns = list(map(lambda x: x.lower(), ticker_ohlc.columns.to_list()))
             table_name = f"{params.tickers[ticker_name]}_{interval}"
             ticker_ohlc.dropna().to_sql(table_name,
+                                        schema=schema,
                                         index_label='date',
                                         if_exists='replace',
                                         con=engine)
