@@ -1,4 +1,31 @@
+from sqlalchemy import types
+
+rename_columns = {"fiscalDateEnding": 'fiscal_date_ending',
+                  "reportedDate": 'reported_date',
+                  "reportedEPS": 'reported_eps',
+                  "estimatedEPS": 'estimated_eps',
+                  "surprise": 'surprise',
+                  "surprisePercentage": 'surprise_percentage'}
+
+column_types = {'fiscal_date_ending': types.Date,
+                'reported_date': types.Date,
+                'reported_eps': types.Numeric,
+                'estimated_eps': types.Numeric,
+                'surprise': types.Numeric,
+                'surprise_percentage': types.Numeric}
+
 intervals = ['1d', '1wk', '1mo', '3mo']
+
+earnings_tickers = {"TSLA": "tsla",
+                    "META": "meta",
+                    "MELI": "meli",
+                    "VALE": "vale",
+                    "SPY": "spy",
+                    "AAPL": "aapl",
+                    "MSFT": "msft",
+                    "KO": "ko",
+                    "GOOG": "goog",
+                    "MSTR": "mstr"}
 
 tickers = {
     "BTC-USD": "btcusd",

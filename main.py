@@ -75,34 +75,35 @@ def pull_data_from_yfinance():
 
 
 def pull_data_from_alphavantage():
-    for ticker_name in tickers_list:
-        try:
-            print(f"Creating earnings tables for {ticker_name} in DB")
-            data = utils.get_alphavantage_earnings(ticker_name, credentials['alphavantage_api_key'])
-            quarterly_earnings = pd.DataFrame.from_dict(data['quarterlyEarnings'])
-            annual_earnings = pd.DataFrame.from_dict(data['annualEarnings'])
-            quarterly_earnings.to_sql(f"{params.tickers[ticker_name]}_quarterly_earnings",
-                                      schema=schema,
-                                      index_label='date',
-                                      if_exists='replace',
-                                      con=engine)
-            logger.info(f"Table {params.tickers[ticker_name]}_quarterly_earnings created!")
+    def insert_earnings(earnings_data, table_name):
+        earnings_data.replace({'None': None}, inplace=True)
+        earnings_data.rename(columns=params.rename_columns, inplace=True)
+        earnings_data.to_sql(table_name,
+                             schema=schema,
+                             index=False,
+                             if_exists='replace',
+                             dtype=params.column_types,
+                             con=engine)
 
-            annual_earnings.to_sql(f"{params.tickers[ticker_name]}_annual_earnings",
-                                   schema=schema,
-                                   index_label='date',
-                                   if_exists='replace',
-                                   con=engine)
-            logger.info(f"Table {params.tickers[ticker_name]}_annual_earnings created!")
-        except:
-            logger.info(f"passing on symbol {ticker_name}")
+    for ticker_name in list(params.earnings_tickers.keys()):
+        print(f"Creating earnings tables for {ticker_name} in DB")
+        symbol_name = params.earnings_tickers[ticker_name]
+        data = utils.get_alphavantage_earnings(ticker_name, credentials['alphavantage_api_key'])
+        if data:
+            insert_earnings(pd.DataFrame.from_dict(data['quarterlyEarnings']), f'{symbol_name}_quarterly_earnings')
+            logger.info(f"Table {symbol_name}_quarterly_earnings created!")
+
+            insert_earnings(pd.DataFrame.from_dict(data['annualEarnings']), f'{symbol_name}_annual_earnings')
+            logger.info(f"Table {symbol_name}_annual_earnings created!")
+            time.sleep(10)
+        else:
             pass
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    schedule.every(1).minutes.do(pull_data_from_yfinance)
-    schedule.every(1).minutes.do(pull_data_from_alphavantage)
+    schedule.every().day.do(pull_data_from_yfinance)
+    schedule.every().day.do(pull_data_from_alphavantage)
     while True:
         schedule.run_pending()
         time.sleep(1)
