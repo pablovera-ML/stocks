@@ -59,6 +59,7 @@ def pull_data_from_yfinance():
             )
             print("Creating table in DB")
             ticker_ohlc = data
+            ticker_ohlc['symbol'] = ticker_name
             ticker_ohlc.columns = list(map(lambda x: x.lower(), ticker_ohlc.columns.to_list()))
             table_name = f"{params.tickers[ticker_name]}_{interval}"
             ticker_ohlc.dropna().to_sql(table_name,
