@@ -1,5 +1,5 @@
 import pandas as pd
-from sqlalchemy import create_engine
+
 from datetime import datetime
 import params
 import time
@@ -12,15 +12,11 @@ logger.info(f"Starting at {datetime.now()}...")
 schema = 'traditional_finance'
 credentials = utils.get_secret()
 logger.info("Creating DB engine")
-db_uri = utils.get_db_url(host=credentials['host'],
-                          database='timeseries',
-                          user_name=credentials['username'],
-                          password=credentials['password'],
-                          port=5432)
-engine = create_engine(db_uri, echo=False)
 logger.info("DB Engine created")
 
 tickers_list = list(params.tickers.keys())
+
+engine = utils.get_engine()
 
 
 def pull_data_from_yfinance():
@@ -97,14 +93,17 @@ def pull_data_from_alphavantage():
             logger.info(f"Table {symbol_name}_annual_earnings created!")
             time.sleep(10)
         else:
+            print(f"Passing on {ticker_name}")
             pass
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    schedule.every(6).hours.do(pull_data_from_yfinance)
+    """schedule.every(6).hours.do(pull_data_from_yfinance)
     schedule.every(6).hours.do(pull_data_from_alphavantage)
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(1)"""
+    pull_data_from_yfinance()
+
 

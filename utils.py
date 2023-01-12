@@ -1,4 +1,6 @@
+import pandas as pd
 import requests
+from sqlalchemy import create_engine
 from datetime import datetime
 import logging
 import os
@@ -6,8 +8,6 @@ from dotenv import load_dotenv
 
 LOGGER = logging.getLogger()
 if len(logging.getLogger().handlers) > 0:
-    # The Lambda environment pre-configures a handler logging to stderr. If a handler is already configured,
-    # `.basicConfig` does not execute. Thus we set the level directly.
     LOGGER.setLevel(logging.INFO)
 else:
     logging.basicConfig(level=logging.INFO)
@@ -42,8 +42,24 @@ def get_max_timestamp_miliseconds(connection, schema, table_name):
 def convert_date_to_timestamp_miliseconds(date):
     return int(datetime.strptime(date, '%Y-%m-%d').timestamp() * 1000)
 
+
 def get_alphavantage_earnings(symbol, api_key):
     url = f'https://www.alphavantage.co/query?function=EARNINGS&symbol={symbol}&apikey={api_key}'
     r = requests.get(url)
     return r.json()
+
+
+def get_engine():
+    credentials = get_secret()
+    db_uri = get_db_url(host=credentials['host'],
+                        database='timeseries',
+                        user_name=credentials['username'],
+                        password=credentials['password'],
+                        port=5432)
+    return create_engine(db_uri, echo=False)
+
+
+def get_american_symbols():
+    engine = get_engine()
+    return pd.read_sql("select symbol from traditional_finance.companies_info order by symbol asc", con=engine).symbol.tolist()
 

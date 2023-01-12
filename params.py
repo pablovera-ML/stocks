@@ -1,4 +1,5 @@
 from sqlalchemy import types
+import utils
 
 rename_columns = {"fiscalDateEnding": 'fiscal_date_ending',
                   "reportedDate": 'reported_date',
@@ -16,16 +17,7 @@ column_types = {'fiscal_date_ending': types.Date,
 
 intervals = ['1d', '1wk', '1mo', '3mo']
 
-earnings_tickers = {"TSLA": "tsla",
-                    "META": "meta",
-                    "MELI": "meli",
-                    "VALE": "vale",
-                    "SPY": "spy",
-                    "AAPL": "aapl",
-                    "MSFT": "msft",
-                    "KO": "ko",
-                    "GOOG": "goog",
-                    "MSTR": "mstr"}
+earnings_tickers = {s: s.lower() for s in utils.get_american_symbols()}
 
 tickers = {
     "BTC-USD": "btcusd",
@@ -57,27 +49,6 @@ tickers = {
     "BCH-USD": "bchusd",
     "ALGO-USD": "algousd",
 
-    "BITO": "pro_shares_btc_etf",
-
-    "TSLA": "tsla",
-    "META": "meta",
-    "MELI": "meli",
-    "VALE": "vale",
-    "SPY": "spy",
-    "AAPL": "aapl",
-    "MSFT": "msft",
-    "KO": "ko",
-    "GOOG": "goog",
-    "MSTR": "mstr",
-
-    "PHO": "pho",
-    "FIW": "fiw",
-    "CGW": "cgw",
-    "AWK": "awk",
-    "WTRG": "wtrg",
-    "XYL": "xyl",
-    "ECL": "ecl",
-
     "^GSPC": "sp500",
     "^DJI": "dowjones30",
     "^IXIC": "nasdaq",
@@ -88,16 +59,11 @@ tickers = {
     "^FTSE": "ftse100",
     "^TNX": "treasury_yield_10_years",
     "^VIX": "vix",
-    "XLF": "xlf",
-    "XLE": "xle",
-    "EEM": "eem",
-    "QQQ": "qqq_nasdaq_100",
-    "IWM": "iwm_russel",
-    "DIA": "dia",
 
     "EURUSD=X": "eurusd",
     "ARS=X": "arsusd"
 
 }
+tickers.update(earnings_tickers)
 
 
