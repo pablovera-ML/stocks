@@ -13,6 +13,8 @@
 .DS_Store
 queries/
 
+*.out
+
 # Generated files
 .idea/**/contentModel.xml
 
