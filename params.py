@@ -19,6 +19,9 @@ intervals = ['1d', '1wk', '1mo', '3mo']
 
 earnings_tickers = {s: s.lower() for s in utils.get_american_symbols()}
 
+ratios = ['pe-ratio', 'price-sales', 'price-book', 'price-fcf', 'current-ratio',
+          'quick-ratio', 'debt-equity-ratio', 'roe', 'roa', 'roi', 'return-on-tangible-equity']
+
 tickers = {
     "BTC-USD": "btcusd",
     "ETH-USD": "ethusd",

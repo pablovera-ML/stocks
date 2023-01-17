@@ -63,3 +63,47 @@ def get_american_symbols():
     engine = get_engine()
     return pd.read_sql("select symbol from traditional_finance.companies_info order by symbol asc", con=engine).symbol.tolist()
 
+
+def collect_ratios(path, ratios):
+    dfs = []
+    for ratio in ratios:
+        try:
+            df = pd.read_html(path + ratio, parse_dates=True)[0]
+            df.columns = df.columns.droplevel()
+            df['Date'] = pd.to_datetime(df.Date)
+            df.set_index('Date', inplace=True)
+            dfs.append(df)
+        except:
+            pass
+        finally:
+            pass
+
+    ratios = pd.concat(dfs, axis=1)
+
+    price = ratios['Stock Price'].values[:, 0]
+    ratios = ratios.drop('Stock Price', axis=1)
+
+    Current_Liabilities = ratios['Current Liabilities'].values[:, 0]
+    ratios = ratios.drop('Current Liabilities', axis=1)
+
+    equity = ratios["Shareholder's Equity"].values[:, 0]
+    ratios = ratios.drop("Shareholder's Equity", axis=1)
+
+    net_income = ratios["TTM Net Income"].values[:, 0]
+    ratios = ratios.drop("TTM Net Income", axis=1)
+
+    ratios['price'] = price
+    ratios['Current Liabilities'] = Current_Liabilities
+    ratios["Shareholder's Equity"] = equity
+    ratios["TTM Net Income"] = net_income
+
+    for c in ratios.columns:
+        if pd.api.types.is_object_dtype(ratios[c].dtype):
+            ratios[c] = ratios[c].str.replace('$', '').str.replace(',', '').str.replace('B', '').str.replace('%',
+                                                                                                             '').astype(
+                float)
+    ratios.rename({'Long Term Debt': 'Total Liabilities'}, inplace=True, axis=1)
+    ratios.columns = [c.lower().replace(' ', '_').replace('-', '_') for c in ratios.columns]
+
+    return ratios
+
