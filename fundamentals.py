@@ -42,9 +42,10 @@ def pull_fundamentals_from_macrotrends():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    schedule.every().minute.do(pull_fundamentals_from_macrotrends)
+    """schedule.every().minute.do(pull_fundamentals_from_macrotrends)
     while True:
         schedule.run_pending()
         time.sleep(1)
-
+"""
+    pull_fundamentals_from_macrotrends()
 
