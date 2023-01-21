@@ -35,8 +35,9 @@ def check_table_existence(connection, schema, table_name):
         );""").first()[0]
 
 
-def get_max_timestamp_miliseconds(connection, schema, table_name):
-    return str(connection.execute(f"""select max(open_time) from {schema}.{table_name};""").first()[0])
+def get_max_timestamp_miliseconds(connection, schema, table_name, date_column_name):
+    return str(connection.execute(f"""select (max({date_column_name})-interval '1 day')::date 
+                                      from {schema}.{table_name};""").first()[0])
 
 
 def convert_date_to_timestamp_miliseconds(date):
@@ -61,7 +62,8 @@ def get_engine():
 
 def get_american_symbols():
     engine = get_engine()
-    return pd.read_sql("select symbol from traditional_finance.companies_info order by symbol asc", con=engine).symbol.tolist()
+    return pd.read_sql("""select replace(symbol, '.', '_') as symbol 
+                          from stocks.companies_info order by symbol asc""", con=engine).symbol.tolist()
 
 
 def collect_ratios(path, ratios):
@@ -106,4 +108,57 @@ def collect_ratios(path, ratios):
     ratios.columns = [c.lower().replace(' ', '_').replace('-', '_') for c in ratios.columns]
 
     return ratios
+
+
+def create_table(connection, schema, table_name):
+    connection.execute(f"""create table {schema}.{table_name}(
+                                date timestamp,
+                                open numeric,
+                                high numeric,
+                                low numeric,
+                                close numeric,
+                                volume numeric,
+                                symbol text,
+                                primary key (date),
+                                unique(date)
+                            )
+                       """)
+    print(f"Table {schema}.{table_name} created!")
+
+
+def insert_klines(engine, connection, schema, table_name, klines):
+    klines.to_sql(con=engine,
+                  schema=schema,
+                  name=f'staging_{table_name}',
+                  index=False,
+                  if_exists='replace')
+    connection.execute(f"""
+                        insert into {schema}.{table_name} 
+                                    (
+                                    date, 
+                                    open, 
+                                    high, 
+                                    low, 
+                                    close, 
+                                    volume, 
+                                    symbol
+                                    )
+                        select 
+                                date::timestamp as date,
+                                open::numeric as open,
+                                high::numeric as high,
+                                low::numeric as low,
+                                close::numeric as close,
+                                volume::numeric as volume,
+                                symbol::text as symbol
+                        from {schema}.staging_{table_name}
+                        on conflict (date) do update SET
+                                date = excluded.date,
+                                open = excluded.open,
+                                high = excluded.high,
+                                low = excluded.low,
+                                close = excluded.close,
+                                volume = excluded.volume,
+                                symbol = excluded.symbol;""")
+    connection.execute(f"drop table {schema}.staging_{table_name};")
 
