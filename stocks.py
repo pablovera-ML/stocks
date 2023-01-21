@@ -41,7 +41,7 @@ def pull_data_from_yfinance():
                     # tickers list or string as well
                     tickers=ticker_name,
 
-                    start=start_date,
+                    start=start_date or '1900-01-01',
                     # use "period" instead of start/end
                     # valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
                     # (optional, default is '1mo')
