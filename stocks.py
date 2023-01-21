@@ -77,6 +77,7 @@ def pull_data_from_yfinance():
                                     table_name=table_name,
                                     klines=ticker_ohlc)
                 print(f"New data inserted in table {table_name}")
+        connection.close()
 
 
 def pull_data_from_alphavantage():
