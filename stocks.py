@@ -26,17 +26,16 @@ def pull_data_from_yfinance():
                 table_name = f"{params.tickers[ticker_name]}_{interval}"
                 print(f"Checking if table {table_name} exists...")
                 table_exist = utils.check_table_existence(connection=connection, schema=schema, table_name=table_name)
+                start_date = '1900-01-01'
 
                 if table_exist:
                     start_date = utils.get_max_timestamp_miliseconds(connection=connection,
                                                                      schema=schema,
                                                                      table_name=table_name, date_column_name='date')
-                    start_date = start_date or '1900-01-01'
                     print(f"Table {table_name} exists and the last date is {start_date}")
                 else:
                     print(f"Table {table_name} does not exist. Creating table {schema}.{table_name}")
                     utils.create_table(connection=connection, schema=schema, table_name=table_name)
-                    start_date = '1900-01-01'
 
                 print(f"Downloading data for {ticker_name} and interval {interval}")
                 data = yfi.download(  # or pdr.get_data_yahoo(...

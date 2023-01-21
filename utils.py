@@ -37,7 +37,7 @@ def check_table_existence(connection, schema, table_name):
 
 def get_max_timestamp_miliseconds(connection, schema, table_name, date_column_name):
     return str(connection.execute(f"""select (max({date_column_name})-interval '1 day')::date 
-                                      from {schema}.{table_name};""").first()[0])
+                                      from {schema}.{table_name};""").first()[0] or '1900-01-01')
 
 
 def convert_date_to_timestamp_miliseconds(date):
