@@ -62,8 +62,8 @@ def get_engine():
 
 def get_american_symbols():
     engine = get_engine()
-    return pd.read_sql("""select replace(symbol, '.', '_') as symbol 
-                          from stocks.companies_info order by symbol asc""", con=engine).symbol.tolist()
+    return pd.read_sql("""select symbol, internal_symbol 
+                          from stocks.companies_info order by symbol asc""", con=engine)
 
 
 def collect_ratios(path, ratios):
