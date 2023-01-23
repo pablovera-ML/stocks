@@ -61,10 +61,8 @@ def pull_data_from_alphavantage():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    pull_data_from_yfinance()
-    """schedule.every(6).hours.do(pull_data_from_yfinance)
+    schedule.every(6).hours.do(pull_data_from_yfinance)
     while True:
         schedule.run_pending()
         time.sleep(1)
-"""
 
