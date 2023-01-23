@@ -15,7 +15,7 @@ column_types = {'fiscal_date_ending': types.Date,
                 'surprise': types.Numeric,
                 'surprise_percentage': types.Numeric}
 
-intervals = ['1d', '1wk', '1mo', '3mo']
+intervals = ['1d']
 
 earnings_tickers = {row['symbol']: row['internal_symbol'] for _, row in utils.get_american_symbols().iterrows()}
 
