@@ -61,6 +61,10 @@ tickers = {
     "^CMC200": "cmc_crypto_200",
     "^FTSE": "ftse100",
     "^TNX": "treasury_yield_10_years",
+    "^TYX": "treasury_yield_30_years",
+    "^FVX": "treasury_yield_5_years",
+    "^IRX": "treasury_yield_13_weeks",
+
     "^VIX": "vix",
 
     "EURUSD=X": "eurusd",
